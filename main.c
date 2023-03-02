@@ -9,7 +9,6 @@ int main(int argv, char *argc[])
 	int value;
 	int longer = 0;
 	int k = 0;
-	
 
 	char *buff;
 
@@ -49,43 +48,40 @@ int main(int argv, char *argc[])
 
 	buff = (char *) malloc((COLS + 1) * sizeof(char));
 
-	while (fgets(buff, COLS + 1, file)){
-		if(k != 18){
-		lineLength = strlen(buff);
+	while (fgets(buff, COLS + 1, file) != NULL){
 		
-		if(longer){
-			if(lineLength > padCols){
-				padCols += lineLength;
+		lineLength = strlen(buff);
+
+		/*check if last character read is new line*/
+		/*Figure out way to not have pad increasing in size everytime*/
+		if(*(buff + (strlen(buff) - 1)) == '\n'){
+			/*move to next line*/
+			wmove(text, y, x);
+			wchgat(text, 2, A_BOLD, 0, NULL);
+			
+			if(y + 1 > padLines - 1){
+				padLines += 3;
+                wresize(text, padLines, padCols);
+			}
+		
+			wmove(text, ++y, x = 0);
+
+		}else{	
+			x += lineLength;	
+			if(x >= padCols){
+				padCols += COLS;
 				wresize(text, padLines, padCols);
 			}
-			longer = 0;
+
+		
 		}
 
 		waddstr(text, buff);
-		if(lineLength < COLS - 1){
-			/*move to next line*/
-			if(y + 1 > LINES){
-				padLines += LINES;
-                wresize(text, padLines, padCols);
-			}
-				wmove(text, ++y, x = 0);
-		}else{	
-			longer = 1;
-		}
-	
-	k++;
-		}
-	}
+		
+}
 	wmove(text, y = 0, x = 0);
 	/*display file
-		wmove(text, ++y, x = 0);
-
-	winsstr(text, buff);
-	if(y + 1 > padLines){
-				padLines++;
-				wresize(text, padLines, padCols);	
-			}
-		wmove(text, y = 0, x = 0);
+	wmove(text, y = 0, x = 0);
 	wchgat(text, 1, A_BOLD, 0, NULL);
 	*/
 
@@ -325,6 +321,6 @@ int main(int argv, char *argc[])
 	endwin();
 	if(buff != NULL) free(buff);
 	fclose(file);
-	
+
 	return 0;
 }

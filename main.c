@@ -11,9 +11,11 @@ int main(int argv, char *argc[])
 	int k = 0;
 
 	char *buff;
+	char l = 'a';
 
 	/*the size of the whole pad*/
 	int padCols, padLines, maxCols;
+
 
 	/*the cols and lines of the pad to be shown*/
 	int scrCols = 0, scrLines = 0;
@@ -48,41 +50,40 @@ int main(int argv, char *argc[])
 
 	buff = (char *) malloc((COLS + 1) * sizeof(char));
 
-	while (fgets(buff, COLS + 1, file) != NULL){
+	while (fgets(buff, COLS + 1, file)){
 		
 		lineLength = strlen(buff);
+		x += lineLength;
 
-		/*check if last character read is new line*/
-		/*Figure out way to not have pad increasing in size everytime*/
-		if(*(buff + (strlen(buff) - 1)) == '\n'){
-			/*move to next line*/
-			wmove(text, y, x);
-			wchgat(text, 2, A_BOLD, 0, NULL);
-			
-			if(y + 1 > padLines - 1){
-				padLines += 3;
-                wresize(text, padLines, padCols);
-			}
-		
-			wmove(text, ++y, x = 0);
-
-		}else{	
-			x += lineLength;	
-			if(x >= padCols){
-				padCols += COLS;
+		if(x  > padCols){
+				padCols += lineLength;
 				wresize(text, padLines, padCols);
-			}
-
-		
 		}
 
+		wmove(text, y, x - lineLength);
 		waddstr(text, buff);
+
+		if(*(buff + (lineLength - 1)) == '\n'){
+			y++;
+			if(y > padLines - 1){
+				padLines += 1;
+                wresize(text, padLines, padCols);
+			}	
+			wmove(text, y, x = 0);
+		}
 		
+	
 }
-	wmove(text, y = 0, x = 0);
-	/*display file
+wmove(text, y = 0, x = 0);
+
+	/*
 	wmove(text, y = 0, x = 0);
 	wchgat(text, 1, A_BOLD, 0, NULL);
+		if(y + 1 > padLines - 1){
+				padLines += 3;
+                wresize(text, padLines, padCols);
+				wmove(text, ++y, x = 0);
+			}			
 	*/
 
 	prefresh(text, scrLines, scrCols, 0, 0, LINES - 1, COLS - 1);
@@ -149,6 +150,7 @@ int main(int argv, char *argc[])
 			break;
 
 		case KEY_RIGHT:
+		if(x + 1 < padCols){
 				x++;
 				/*not off current displayed columns*/
 				if(x < (scrCols + (COLS))){
@@ -180,6 +182,7 @@ int main(int argv, char *argc[])
 				}
 
 				wmove(text, y, x);
+		}
 		break;
 		case KEY_LEFT:
 				x--;
@@ -319,6 +322,7 @@ int main(int argv, char *argc[])
 	}
 
 	endwin();
+	printf("%i", padCols);
 	if(buff != NULL) free(buff);
 	fclose(file);
 

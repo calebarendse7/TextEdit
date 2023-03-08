@@ -7,11 +7,9 @@ int main(int argv, char *argc[])
 	WINDOW *text;
 
 	int value;
-	int longer = 0;
-	int k = 0;
 
 	char *buff;
-	char l = 'a';
+
 
 	/*the size of the whole pad*/
 	int padCols, padLines, maxCols;
@@ -55,7 +53,7 @@ int main(int argv, char *argc[])
 		lineLength = strlen(buff);
 		x += lineLength;
 
-		if(x  > padCols){
+		if(x > padCols){
 				padCols += lineLength;
 				wresize(text, padLines, padCols);
 		}
@@ -64,27 +62,20 @@ int main(int argv, char *argc[])
 		waddstr(text, buff);
 
 		if(*(buff + (lineLength - 1)) == '\n'){
+			wmove(text, y, x - 1);
+			wchgat(text, 1, A_BOLD, 0, NULL);
 			y++;
+
 			if(y > padLines - 1){
 				padLines += 1;
                 wresize(text, padLines, padCols);
 			}	
+
 			wmove(text, y, x = 0);
 		}
-		
 	
-}
-wmove(text, y = 0, x = 0);
-
-	/*
+	}
 	wmove(text, y = 0, x = 0);
-	wchgat(text, 1, A_BOLD, 0, NULL);
-		if(y + 1 > padLines - 1){
-				padLines += 3;
-                wresize(text, padLines, padCols);
-				wmove(text, ++y, x = 0);
-			}			
-	*/
 
 	prefresh(text, scrLines, scrCols, 0, 0, LINES - 1, COLS - 1);
 
@@ -244,7 +235,6 @@ wmove(text, y = 0, x = 0);
 					
 					wmove(text, ++y, 0);
 					wdeleteln(text);
-
 					wmove(text, --y, x = pos);
 					if(x > scrCols + COLS){
 						scrCols = x - (x % COLS);
@@ -322,7 +312,6 @@ wmove(text, y = 0, x = 0);
 	}
 
 	endwin();
-	printf("%i", padCols);
 	if(buff != NULL) free(buff);
 	fclose(file);
 

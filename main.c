@@ -258,8 +258,6 @@ int main(int argv, char *argc[])
 						winsertln(text);
 						wchgat(text, 1, A_BOLD, 0, NULL); 
 					}else{
-						
-
 						wmove(text, y, x);
 						winsertln(text);	
 						n = x;

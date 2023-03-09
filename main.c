@@ -9,11 +9,9 @@ int main(int argv, char *argc[])
 	int value;
 
 	char *buff;
-
-
+	
 	/*the size of the whole pad*/
 	int padCols, padLines, maxCols;
-
 
 	/*the cols and lines of the pad to be shown*/
 	int scrCols = 0, scrLines = 0;
@@ -47,6 +45,10 @@ int main(int argv, char *argc[])
 	padLines = LINES;	
 
 	buff = (char *) malloc((COLS + 1) * sizeof(char));
+
+	if(buff == NULL){
+		printf("ERROR: Buffer not allocated\n");
+	}
 
 	while (fgets(buff, COLS + 1, file)){
 		
@@ -212,30 +214,37 @@ int main(int argv, char *argc[])
 					wmove(text, --y, x);
 
 					/*find last pos on last line*/
+					
 					for(i = 0; i < padCols; i++){
-						wmove(text, y, i);
-						if(winch(text) & A_BOLD) break;
-					}
+                        wmove(text, y, i);
+                        if(winch(text) & A_BOLD) break;
+                        
+                    }
 
 					wdelch(text);
 					n = i ;
 					pos = n;
 					
 					/*copy characters*/
-					for(i = 0; i < padCols; i++){
+					while(x < padCols){
 						/*move down*/
 						wmove(text, ++y, x);
-						value = winch(text);
+						/*value = winch(text);*/
+						winnstr(text, buff, COLS);
+						lineLength = strlen(buff);
 						/*move up*/
 						wmove(text, --y, n);
-						waddch(text, value);
-						++x;
-						++n;
+						/*waddch(text, value);*/
+						waddnstr(text, buff, lineLength);
+						x += lineLength;
+						n += lineLength;
+
 					}
 					
 					wmove(text, ++y, 0);
 					wdeleteln(text);
 					wmove(text, --y, x = pos);
+
 					if(x > scrCols + COLS){
 						scrCols = x - (x % COLS);
 					}
@@ -262,16 +271,19 @@ int main(int argv, char *argc[])
 						winsertln(text);	
 						n = x;
 
-						for(i = 0; i < padCols; i++){
-								wmove(text, --y, n);
 						
-								value = winch(text);
-						
-								wmove(text, ++y, i);
-						
-								winsch(text, value);
-								n++;
+						for(i = 0; i < padCols; i += lineLength){
+							wmove(text, --y, n);
+							winnstr(text, buff, COLS);
+
+							lineLength = strlen(buff);
+
+							wmove(text, ++y, i);
+							waddnstr(text, buff, lineLength);
+
+							n += lineLength;
 						}
+						
 
 						wmove(text, --y, x);
 						wclrtoeol(text);
@@ -310,6 +322,7 @@ int main(int argv, char *argc[])
 	}
 
 	endwin();
+
 	if(buff != NULL) free(buff);
 	fclose(file);
 

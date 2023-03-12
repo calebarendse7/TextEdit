@@ -7,9 +7,9 @@ int main(int argv, char *argc[])
 	WINDOW *text;
 
 	int value;
-
+ 
 	char *buff;
-	
+
 	/*the size of the whole pad*/
 	int padCols, padLines, maxCols;
 
@@ -86,29 +86,16 @@ int main(int argv, char *argc[])
 		switch (value){
 
 		case KEY_UP:
-				/*if prev line off screen update displayed part of pad*/
-					y--;
-					if(y < dispLines){
-						scrLines = y - (y % LINES);
-					}
-					for(i = 0; i < padCols; i++){
-						wmove(text, y, i);
-						if(winch(text) & A_BOLD) break;
-					}
-					/*check if past the bumper*/
-					if(x >= i){
-						/*go to correct column was -1*/
-						x = i;
-						/*check if end of past line is off screen*/
-						if(x < scrCols){
-							/*move screen appropriately was i - cols before*/
-							scrCols = x - (x % COLS);
-						}
-					}
-				
+			y--;
+			for(i = 0; i < padCols; i++){
+				wmove(text, y, i);
+				if(winch(text) & A_BOLD) break;
+			}
+			if(x >= i){
+				x = i;
+			}	
 			wmove(text, y, x);
-			break;
-
+		break;
 		case KEY_DOWN:
 			/*check if not last line*/
 			if(y + 1 < padLines){
@@ -119,29 +106,13 @@ int main(int argv, char *argc[])
 						wmove(text, y, i);
 						if(winch(text) & A_BOLD) break;
 					}
-
-					/*check if past the bumper*/
 					if(i <= x){
-						/*go to correct column*/
 						x = i;
-
-						/*check if end of past line is off screen*/
-						if(x < scrCols){
-							/*move screen appropriately was i - cols before*/
-							scrCols = x - (x % COLS);
-						}
 					}
-
-					/*check if on farther down line*/
-					if(y > (scrLines + (LINES - 1))){
-						/*Clear screen for new part of pad*/
-						scrLines = y;
-					}	
 					/*move the cursor*/
 					wmove(text, y, x);
 			}
-			break;
-
+		break;
 		case KEY_RIGHT:
 		if(x + 1 < padCols){
 				x++;
@@ -158,52 +129,33 @@ int main(int argv, char *argc[])
 							/*check if not hit max
 							if(y + 1 < padLines){}*/
 								y++;
-							
-								/*check if on next line not displayed*/
-							if(y > (scrLines + (LINES - 1))){
-								/*move dispayed lines*/
-								scrLines = y;	
-							}
-							
 						}else{
 							x--;
 						}	
 					}	
-				}else{
-					/*move displayed columns*/
-					scrCols = x;
 				}
-
 				wmove(text, y, x);
 		}
 		break;
 		case KEY_LEFT:
-				x--;
-				if(x < scrCols){
-					/*only needs to */
-					if(scrCols == 0){
-						if(y != 0){
-							y--;
-							/*find last bumper on prev line*/
-							for(x = 0; x < padCols; x++){
-								wmove(text, y, x);
-								if(winch(text) & A_BOLD) break;
-							}
-							if(x > scrCols + COLS){
-								scrCols = x - (x % COLS);
-							}
-							if(y < scrLines){
-								scrLines = y - (y % LINES);
-							}
-							
+			x--;
+			if(x < scrCols){
+				/*only needs to */
+				if(scrCols == 0){
+					if(y != 0){
+						y--;
+						/*find last bumper on prev line*/
+						for(x = 0; x < padCols; x++){
+							wmove(text, y, x);
+							if(winch(text) & A_BOLD) break;
 						}
-					}else{
-						scrCols = x - (x % COLS);
+							
 					}
 				}
-				wmove(text, y, x);		
+			}
+			wmove(text, y, x);		
 			
-			break;
+		break;
 
 		case KEY_BACKSPACE:
 		case '\b':
@@ -211,18 +163,15 @@ int main(int argv, char *argc[])
 			if(x != 0){
 					mvwdelch(text, y, --x);
 			}else{
-					wmove(text, --y, x);
-
-					/*find last pos on last line*/
+					wmove(text, --y, i);
 					
-					for(i = 0; i < padCols; i++){
+                    for(i = 0; i < padCols; i++){
                         wmove(text, y, i);
                         if(winch(text) & A_BOLD) break;
-                        
                     }
 
 					wdelch(text);
-					n = i ;
+					n = i;
 					pos = n;
 					
 					/*copy characters*/
@@ -245,15 +194,14 @@ int main(int argv, char *argc[])
 					wdeleteln(text);
 					wmove(text, --y, x = pos);
 
-					if(x > scrCols + COLS){
-						scrCols = x - (x % COLS);
-					}
-					if(y < scrLines){
-						scrLines = y - (y % LINES);
-					}
+					
 			}
+			/*had resize here*/
 			padLines--;
-			wresize(text, padLines, padCols);
+            wresize(text, padLines, padCols);
+
+			wclear(stdscr);
+			wnoutrefresh(stdscr);
 		break;
 
 		case KEY_ENTER:
@@ -271,7 +219,6 @@ int main(int argv, char *argc[])
 						winsertln(text);	
 						n = x;
 
-						
 						for(i = 0; i < padCols; i += lineLength){
 							wmove(text, --y, n);
 							winnstr(text, buff, COLS);
@@ -283,7 +230,6 @@ int main(int argv, char *argc[])
 
 							n += lineLength;
 						}
-						
 
 						wmove(text, --y, x);
 						wclrtoeol(text);
@@ -291,25 +237,27 @@ int main(int argv, char *argc[])
 						wchgat(text, 1, A_BOLD, 0, NULL);
 						wmove(text, ++y, x = 0);
 					}
-					
-					if(x < scrCols){
-						scrCols = x - (x % COLS);
-					}
-					/*check if on farther down line*/
-					if(y > (scrLines + (LINES - 1))){
-						/*Clear screen for new part of pad*/
-						scrLines = y;
-					}	
-
 			wmove(text, y, x);	
-					
+
 		break;
 		default:
 			winsch(text, value);
 			wmove(text, y, ++x);
 		break;
-
 		}
+		
+		if(x < dispCols){
+			scrCols = x - (x % COLS);
+		}else if(x > scrCols + (COLS - 1)){
+			scrCols = x;
+		}
+
+		if(y < dispLines){
+			scrLines = y - (y % LINES);
+		}else if (y > (scrLines + (LINES - 1))){
+			scrLines = y;	
+		}
+
 		/*check if screen moved*/
 		if(scrLines != dispLines || scrCols != dispCols){
 			wclear(stdscr);

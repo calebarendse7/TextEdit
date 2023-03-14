@@ -1,11 +1,14 @@
-all:pro
+all:editor
 
-pro:main.o 
-	gcc main.o -o pro -lncurses
+editor:main.o readFile.o
+	gcc main.o readFile.o -o editor -lncurses
 	
-main.o: main.c wprocess.h
+main.o: main.c textedit.h
 	gcc -ansi -pedantic -g -c -o main.o main.c
 
+readFile.o: readFile.c textedit.h
+	gcc -ansi -pedantic -g -c -o readFile.o readFile.c
+
 clean:
-	rm -rf *.o pro
+	rm -rf *.o editor
 

@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "stdio.h": "c",
-        "t": "c"
+        "t": "c",
+        "wprocess.h": "c"
     }
 }

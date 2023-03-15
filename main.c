@@ -6,7 +6,7 @@ int main(int argv, char *argc[]){
 	WINDOW *text;
 
 	int value;
- 
+	int k = 0; 
 	char *buff;
 
 	/*the size of the whole pad*/
@@ -109,6 +109,7 @@ int main(int argv, char *argc[]){
 			}
 			break;
 			case KEY_LEFT:
+			
 				x--;
 				if(x < scrCols){
 					/*only needs to */
@@ -120,7 +121,6 @@ int main(int argv, char *argc[]){
 								wmove(text, y, x);
 								if(winch(text) & A_BOLD) break;
 							}
-								
 						}
 					}
 				}
@@ -134,43 +134,53 @@ int main(int argv, char *argc[]){
 				if(x != 0){
 						mvwdelch(text, y, --x);
 				}else{
-						wmove(text, --y, i);
-						
-						/*find last positon on prev line*/
-						for(i = 0; i < padCols; i++){
-							wmove(text, y, i);
+					for(k = 0; k < padCols; k++){
+							wmove(text, y, k);
 							if(winch(text) & A_BOLD) break;
-						}
+					}
 
-						wdelch(text);
-						n = i;
-						pos = n;
+					if(k > COLS){
+						buff = (char *)realloc(buff, sizeof(char) * (k + 1));
 						
-						/*copy characters*/
-						while(x < padCols){
-							wmove(text, ++y, x);
-							winnstr(text, buff, COLS);
-
-							lineLength = strlen(buff);
-					
-							wmove(text, --y, n);
-							waddnstr(text, buff, lineLength);
-
-							x += lineLength;
-							n += lineLength;
+						if(buff == NULL){
+							printf("ERROR: Buffer not allocated\n");
 						}
+					}
+
+					wmove(text, y, x);
+					winnstr(text, buff, k);
+
+					wmove(text, --y, i);
+
+					/*find last positon on prev line*/
+					for(i = 0; i < padCols; i++){
+						wmove(text, y, i);
+						if(winch(text) & A_BOLD) break;
+					}
 						
-						wmove(text, ++y, 0);
+					wdelch(text);
+					n = pos = i;
 
-						wdeleteln(text);
+					wmove(text, y, n);
+					waddnstr(text, buff, k);
+						
+					wmove(text, ++y, 0);
 
-						wmove(text, --y, x = n);
+					wdeleteln(text);
 
-						padLines--;
-						wresize(text, padLines, padCols);
+					wmove(text, --y, k+i);
+              		wchgat(text, 1, A_BOLD, 0, NULL);
 
+					wmove(text, y, x = pos);
+
+					padLines--;
+					wresize(text, padLines, padCols);
+
+					/*if on last page*/
+					if(scrLines + LINES > padLines){
 						wclear(stdscr);
 						wnoutrefresh(stdscr);
+					}
 				}
 				
 			break;
@@ -180,7 +190,6 @@ int main(int argv, char *argc[]){
 			/*make pad one line bigger*/
 					padLines++;
 					wresize(text, padLines, padCols);
-
 					y++;	
 						if(x == 0){
 							winsertln(text);
@@ -212,8 +221,14 @@ int main(int argv, char *argc[]){
 
 			break;
 			default:
-				winsch(text, value);
-				wmove(text, y, ++x);
+			/*needs to check if extending past max pad size if typing anywhere*/
+			x++;
+			if(x > padCols){
+				padCols++;
+				wresize(text, padLines, padCols);
+			}
+			winsch(text, value);
+			wmove(text, y, x);
 			break;
 		}
 		
@@ -244,6 +259,5 @@ int main(int argv, char *argc[]){
 
 	if(buff != NULL) free(buff);
 	fclose(file);
-
 	return 0;
 }

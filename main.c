@@ -1,12 +1,10 @@
 #include "textedit.h"
 
 int main(int argv, char *argc[]){
-
 	FILE *file;
 	WINDOW *text;
 
 	int value;
-	int k = 0; 
 	char *buff;
 
 	/*the size of the whole pad*/
@@ -24,10 +22,7 @@ int main(int argv, char *argc[]){
 	int x = 0, y = 0;
 
 	/*index variable*/
-	int i, n, pos; 
-
-	file = fopen("t", "r+");
-
+	int i, n, pos, k; 
 
 	/*Initialize Window*/
 	initscr();
@@ -49,13 +44,17 @@ int main(int argv, char *argc[]){
 	if(buff == NULL){
 		printf("ERROR: Buffer not allocated\n");
 	}
+	
+	if(argv > 1){
+		file = fopen(*(argc+1), "r+");
+		readFile(text, file, buff);
+		getmaxyx(text, padLines, padCols);
+		wmove(text, y = 0, x = 0);
+	}else{
+		file = fopen("default.txt", "w");
+	}
 
-	readFile(text, file, buff);
-	getmaxyx(text, padLines, padCols);
-
-	wmove(text, y = 0, x = 0);
 	prefresh(text, scrLines, scrCols, 0, 0, LINES - 1, COLS - 1);
-
 	while ((value = wgetch(text)) != 'q'){
 		switch (value){
 			case KEY_UP:
@@ -173,8 +172,7 @@ int main(int argv, char *argc[]){
 
 					wmove(text, y, x = pos);
 
-					padLines--;
-					wresize(text, padLines, padCols);
+					wresize(text, --padLines, padCols);
 
 					/*if on last page*/
 					if(scrLines + LINES > padLines){
@@ -188,8 +186,7 @@ int main(int argv, char *argc[]){
 			case KEY_ENTER:
 			case 10:
 			/*make pad one line bigger*/
-					padLines++;
-					wresize(text, padLines, padCols);
+					wresize(text, ++padLines, padCols);
 					y++;	
 						if(x == 0){
 							winsertln(text);
@@ -221,27 +218,30 @@ int main(int argv, char *argc[]){
 
 			break;
 			default:
-			/*needs to check if extending past max pad size if typing anywhere*/
+			/*one solution*/
+			for(i = 0; i < padCols; i++){
+				wmove(text, y, i);
+				if(winch(text) & A_BOLD) break;
+			}
+			wmove(text, y, x);
 			x++;
-			if(x > padCols){
-				padCols++;
+
+			if(i + 1 > padCols){
+				padCols += 2;
 				wresize(text, padLines, padCols);
 			}
+
 			winsch(text, value);
 			wmove(text, y, x);
 			break;
 		}
 		
-		if(x < dispCols){
+		if(x < dispCols || x > scrCols + (COLS - 1) ){
 			scrCols = x - (x % COLS);
-		}else if(x > scrCols + (COLS - 1)){
-			scrCols = x;
 		}
 
-		if(y < dispLines){
+		if(y < dispLines || y > (scrLines + (LINES - 1))){
 			scrLines = y - (y % LINES);
-		}else if (y > (scrLines + (LINES - 1))){
-			scrLines = y;	
 		}
 
 		/*check if screen moved*/
